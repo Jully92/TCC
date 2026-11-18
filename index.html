@@ -2417,6 +2417,22 @@
       });
     }
 
+    // Mapa de fotos padrão por card (arquivos no GitHub Pages)
+    const DEFAULT_PHOTOS = {
+      'c1': 'Profissional.JPEG',
+      'c2': 'faculdade.jpg',
+      'c3': 'Limites.jpg',
+      'c4': 'Ree.JPEG',
+      'c5': 'Tempo.JPEG',
+      'c6': 'Casa Nova.JPEG',
+      'd1': 'Tempo de Qualidade.JPEG',
+      'd2': 'Futuro.JPEG',
+      'm1': 'Tempo Qualidade.JPEG',
+      'm2': 'Treinoo.JPEG',
+      'm3': 'Estudos.JPEG',
+      'm4': 'poupanca.PNG'
+    };
+
     // Carregar todas as fotos salvas (Cards + Avatares) de forma assíncrona
     async function loadAllSavedPhotos() {
       const allKeys = [
@@ -2435,8 +2451,10 @@
             if (el) el.src = val;
           }
         } else {
+          // Usa foto salva localmente; se não houver, usa a foto padrão do GitHub
           const val = await getPhoto('foto_' + id);
-          renderCardPhoto(id, val);
+          const fallback = DEFAULT_PHOTOS[id] ? DEFAULT_PHOTOS[id] : null;
+          renderCardPhoto(id, val || fallback);
         }
       }
     }
