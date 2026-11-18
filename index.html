@@ -2433,6 +2433,41 @@
       'm4': 'poupanca.PNG'
     };
 
+    // Ajustes exatos definidos pela Juliana (zoom + posição) — fixos para visitantes
+    const STATIC_ADJUSTMENTS = {
+      'c1': { x: 0,   y: 0,   zoom: 1.18 },
+      'c2': { x: 44,  y: -2,  zoom: 1.26 },
+      'c3': { x: 2,   y: 9,   zoom: 2.12 },
+      'c4': { x: 6,   y: -6,  zoom: 2.15 },
+      'c5': { x: 1,   y: -50, zoom: 2.44 },
+      'c6': { x: -3,  y: -58, zoom: 3.00 },
+      'd1': { x: -89, y: 46,  zoom: 1.72 },
+      'd2': { x: -7,  y: 23,  zoom: 2.53 },
+      'm1': { x: 0,   y: 0,   zoom: 2.13 },
+      'm2': { x: 2,   y: -27, zoom: 1.32 },
+      'm3': { x: -3,  y: 39,  zoom: 1.32 },
+      'm4': { x: 3,   y: 72,  zoom: 3.48 }
+    };
+
+    // Renderiza foto estática com zoom/posição exatos — sem controles para visitantes
+    function renderStaticPhoto(cardKey, src) {
+      const container = document.getElementById('photoArea_' + cardKey);
+      if (!container) return;
+      const adj = STATIC_ADJUSTMENTS[cardKey] || { x: 0, y: 0, zoom: 1 };
+      container.innerHTML = `
+        <div class="photo-preview-wrap" id="photoWrap_${cardKey}" style="cursor:default;">
+          <div class="photo-blur-backdrop" style="background-image:url('${src}');"></div>
+          <div class="photo-viewport" style="cursor:default; touch-action:auto;" id="photoViewport_${cardKey}">
+            <img id="photoImg_${cardKey}" src="${src}" alt="Foto do tópico"
+              style="max-width:100%; max-height:100%; width:auto; height:auto;
+                     display:block; pointer-events:none; transform-origin:center center;
+                     transform:translate(${adj.x}px,${adj.y}px) scale(${adj.zoom});"
+              draggable="false">
+          </div>
+        </div>
+      `;
+    }
+
     // Carregar todas as fotos salvas (Cards + Avatares) de forma assíncrona
     async function loadAllSavedPhotos() {
       const allKeys = [
@@ -2451,10 +2486,14 @@
             if (el) el.src = val;
           }
         } else {
-          // Usa foto salva localmente; se não houver, usa a foto padrão do GitHub
           const val = await getPhoto('foto_' + id);
-          const fallback = DEFAULT_PHOTOS[id] ? DEFAULT_PHOTOS[id] : null;
-          renderCardPhoto(id, val || fallback);
+          if (val) {
+            // Foto salva localmente → versão interativa (só pra você)
+            renderCardPhoto(id, val);
+          } else if (DEFAULT_PHOTOS[id]) {
+            // Foto padrão do GitHub → estática com zoom/posição exatos
+            renderStaticPhoto(id, DEFAULT_PHOTOS[id]);
+          }
         }
       }
     }
