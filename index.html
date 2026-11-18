@@ -237,7 +237,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      cursor: pointer;
+      cursor: default;
       user-select: none;
     }
     .meta-avatar-wrap {
@@ -252,11 +252,6 @@
       justify-content: center;
       flex-shrink: 0;
       box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .meta-person:hover .meta-avatar-wrap {
-      transform: scale(1.05);
-      border-color: var(--sage-hover);
     }
     .meta-avatar {
       width: 100%;
@@ -264,6 +259,7 @@
       border-radius: 50%;
       object-fit: cover;
       display: block;
+      pointer-events: none;
     }
     .meta-person-info {
       display: flex;
@@ -1315,8 +1311,6 @@
     <source src="andriig-background-music-background-604062.ogg" type="audio/ogg">
     <source src="andriig-background-music-background-604062.wav" type="audio/wav">
   </audio>
-  <input type="file" id="pickerFotoJaqueline" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event, 'jaqueline')">
-  <input type="file" id="pickerFotoJuliana" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event, 'juliana')">
   <input type="file" id="cardPhotoInput" accept="image/*" style="display: none;" onchange="handleCardPhotoUpload(event)">
 
   <div class="container">
@@ -1339,11 +1333,11 @@
 
       <h1>Metas para 2027</h1>
       
-      <!-- Identificação da Sessão: Paciente & Psicóloga com Mini Foto Arredondada -->
+      <!-- Identificação da Sessão: Paciente & Psicóloga com Mini Foto Arredondada (Fixa / Congelada) -->
       <div class="session-meta-card">
-        <div class="meta-person" onclick="document.getElementById('pickerFotoJaqueline').click()" title="Clique para escolher a foto de Jaqueline Silva">
+        <div class="meta-person">
           <div class="meta-avatar-wrap">
-            <img src="36c56c27-9830-423c-af3e-cc44a70c4a1b.jpg" alt="Jaqueline Silva" class="meta-avatar" id="avatarJaqueline" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Jaqueline+Silva&background=eaf2ed&color=336653&rounded=true&bold=true';">
+            <img src="36c56c27-9830-423c-af3e-cc44a70c4a1b.jpg" alt="Jaqueline Silva" class="meta-avatar" id="avatarJaqueline" draggable="false" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Jaqueline+Silva&background=eaf2ed&color=336653&rounded=true&bold=true';">
           </div>
           <div class="meta-person-info">
             <span class="meta-role">Psicóloga</span>
@@ -1351,9 +1345,9 @@
           </div>
         </div>
         <div class="meta-divider"></div>
-        <div class="meta-person" onclick="document.getElementById('pickerFotoJuliana').click()" title="Clique para escolher a foto de Juliana Carvalho">
+        <div class="meta-person">
           <div class="meta-avatar-wrap">
-            <img src="5b49b24b-6633-401f-86ea-dcf4d0a19174.jpg" alt="Juliana Carvalho" class="meta-avatar" id="avatarJuliana" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Juliana+Carvalho&background=edf4f8&color=3b6b88&rounded=true&bold=true';">
+            <img src="5b49b24b-6633-401f-86ea-dcf4d0a19174.jpg" alt="Juliana Carvalho" class="meta-avatar" id="avatarJuliana" draggable="false" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Juliana+Carvalho&background=edf4f8&color=3b6b88&rounded=true&bold=true';">
           </div>
           <div class="meta-person-info">
             <span class="meta-role">Paciente</span>
@@ -2400,23 +2394,6 @@
       }
     });
 
-    // Upload e persistência das fotos de perfil (Jaqueline & Juliana) com compressão
-    function handlePhotoUpload(event, person) {
-      const file = event.target.files[0];
-      event.target.value = '';
-      if (!file) return;
-
-      compressImage(file, 400, 400, 0.85, async function(compressedUrl) {
-        const key = (person === 'jaqueline') ? 'avatar_jaqueline' : 'avatar_juliana';
-        const imgId = (person === 'jaqueline') ? 'avatarJaqueline' : 'avatarJuliana';
-        const el = document.getElementById(imgId);
-        if (el) el.src = compressedUrl;
-
-        photosCache[key] = compressedUrl;
-        await savePhoto(key, compressedUrl);
-      });
-    }
-
     // Mapa de fotos padrão por card (arquivos no GitHub Pages)
     const DEFAULT_PHOTOS = {
       'c1': 'Profissional.JPEG',
@@ -2468,32 +2445,22 @@
       `;
     }
 
-    // Carregar todas as fotos salvas (Cards + Avatares) de forma assíncrona
+    // Carregar todas as fotos salvas dos cards de forma assíncrona (avatares permanecem fixos/congelados)
     async function loadAllSavedPhotos() {
       const allKeys = [
-        'avatar_jaqueline',
-        'avatar_juliana',
         'c1','c2','c3','c4','c5','c6',
         'd1','d2',
         'm1','m2','m3','m4'
       ];
 
       for (const id of allKeys) {
-        if (id.startsWith('avatar_')) {
-          const val = await getPhoto(id);
-          if (val) {
-            const el = document.getElementById(id === 'avatar_jaqueline' ? 'avatarJaqueline' : 'avatarJuliana');
-            if (el) el.src = val;
-          }
-        } else {
-          const val = await getPhoto('foto_' + id);
-          if (val) {
-            // Foto salva localmente → versão interativa (só pra você)
-            renderCardPhoto(id, val);
-          } else if (DEFAULT_PHOTOS[id]) {
-            // Foto padrão do GitHub → estática com zoom/posição exatos
-            renderStaticPhoto(id, DEFAULT_PHOTOS[id]);
-          }
+        const val = await getPhoto('foto_' + id);
+        if (val) {
+          // Foto salva localmente → versão interativa (só pra você)
+          renderCardPhoto(id, val);
+        } else if (DEFAULT_PHOTOS[id]) {
+          // Foto padrão do GitHub → estática com zoom/posição exatos
+          renderStaticPhoto(id, DEFAULT_PHOTOS[id]);
         }
       }
     }
